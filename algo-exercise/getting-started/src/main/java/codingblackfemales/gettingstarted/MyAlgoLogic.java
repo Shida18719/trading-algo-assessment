@@ -66,28 +66,28 @@ public class MyAlgoLogic implements AlgoLogic {
             return NoAction;
         }
 
-        // Method interfering with order fulfillment
+        // Modify method- was interfering with order fulfillment
         //checks how many child orders are currently active
         final var activeOrders = state.getActiveChildOrders();
 
         // If there are active orders, check conditions before canceling
         if (activeOrders.size() > 0) {
 
-        // Cancel the first active order, if it exist, before placing new order
+        // Cancel the first active order, if it exist before placing new order:
+        //  based on if the price has moved significantly 
             final var option = activeOrders.stream().findFirst();
 
             if (option.isPresent()) {
                 var childOrder = option.get();
 
-                double currentVWAP = calculatedVWAP;
-                long orderPrice = childOrder.getPrice();
+                double orderPrice = childOrder.getPrice();
 
                 // Cancel the order if the price has moved significantly
                 // Set a threshold for when the price is far enough to warrant cancellation
                 double priceThreshold = 0.05; // 5% threshold
 
                 // Calculates the absolute difference between the order price
-                if(Math.abs(orderPrice - currentVWAP) / currentVWAP > priceThreshold) {
+                if(Math.abs(orderPrice - calculatedVWAP) / calculatedVWAP > priceThreshold) {
 
                 logger.info("[MYLALGO] Cancelling order:" + childOrder);
                 return new CancelChildOrder(childOrder);
@@ -98,12 +98,10 @@ public class MyAlgoLogic implements AlgoLogic {
             }
         }
 
-        // logger.info("==========[MYALGO] Target Reached===========");
-
         // Calculate the remaining quantity to trade
         long remQuantity = quantityToTrade - executedQuantity;
 
-        // // Check if we should place a buy order
+        // Check if we should place a buy order
         // If fewer than 3 child orders exist and there is still more quantity to trade continue
         if (state.getChildOrders().size() < 3 && remQuantity > 0){
             
