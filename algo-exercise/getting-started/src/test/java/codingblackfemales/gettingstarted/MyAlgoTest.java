@@ -1,6 +1,14 @@
 package codingblackfemales.gettingstarted;
 
+import codingblackfemales.action.Action;
 import codingblackfemales.algo.AlgoLogic;
+import codingblackfemales.sotw.SimpleAlgoState;
+
+import java.nio.ByteBuffer;
+import messages.marketdata.*;
+import org.agrona.concurrent.UnsafeBuffer;
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -17,13 +25,15 @@ import static org.junit.Assert.assertEquals;
  *
  */
 public class MyAlgoTest extends AbstractAlgoTest {
+    // private  MyAlgoLogic algoLogic;
 
     @Override
     public AlgoLogic createAlgoLogic() {
         //this adds your algo logic to the container classes
-        return new MyAlgoLogic();
-    }
 
+        return new MyAlgoLogic(13000, 108.5);
+    }
+    
 
     @Test
     public void testDispatchThroughSequencer() throws Exception {
@@ -31,8 +41,13 @@ public class MyAlgoTest extends AbstractAlgoTest {
         //create a sample market data tick....
         send(createTick());
 
+        
         //simple assert to check we had 3 orders created
+<<<<<<< HEAD
         assertEquals(container.getState().getChildOrders().size(), 3);
+=======
+        assertEquals(3, container.getState().getChildOrders().size());
+>>>>>>> branch_R
 
     }
 }
