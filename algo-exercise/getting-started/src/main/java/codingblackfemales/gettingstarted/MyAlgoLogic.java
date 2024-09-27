@@ -108,7 +108,7 @@ public class MyAlgoLogic implements AlgoLogic {
             long totalVolume = 0;
             long volumePrice = 0;
 
-            // Loop through all child orders and sums their prices and quantities
+            // Loop through all child buy orders and sums their prices and quantities
                 for (int i = 0; i < state.getChildOrders().size(); i++) {
                     final BidLevel level = state.getBidAt(i);
                     if (level == null) {

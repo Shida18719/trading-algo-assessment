@@ -6,8 +6,11 @@ import codingblackfemales.sotw.SimpleAlgoState;
 
 import java.nio.ByteBuffer;
 import messages.marketdata.*;
+import messages.order.Side;
+
 import org.agrona.concurrent.UnsafeBuffer;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -41,7 +44,18 @@ public class MyAlgoTest extends AbstractAlgoTest {
         //create a sample market data tick....
         send(createTick());
 
-        
+        SimpleAlgoState state = container.getState();
+
+        // Check number of active buy orders
+        long activeBuyOrders = state.getActiveChildOrders().stream()
+                               .filter(order -> order.getSide() == Side.BUY)
+                               .count();
+        assertTrue("Number of active buy orders should not exceed 3", activeBuyOrders <= 3);
+            
+
+
+        // Check if the target quantity is reached
+
         //simple assert to check we had 3 orders created
         assertEquals(3, container.getState().getChildOrders().size());
     }
