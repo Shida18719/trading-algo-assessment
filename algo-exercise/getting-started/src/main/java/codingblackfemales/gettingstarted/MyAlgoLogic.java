@@ -53,7 +53,7 @@ public class MyAlgoLogic implements AlgoLogic {
         executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
 
 
-        // Exit condition: stop once the total traded quantity matches the target, since we don't want to overtrade
+        // Exit condition: stop once the total traded quantity matches the target, since we don't want to over trade
         if (executedQuantity >= quantityToTrade) {
             logger.info("[MYALGO] ======VWAP target achieved======. No more orders to place.");
             return NoAction;
