@@ -149,12 +149,6 @@ public class MyAlgoLogic implements AlgoLogic {
         }
         // Check if we should place a sell order
         // Get ask price at the top of the book
-        // final AskLevel bestAsk = state.getAskAt(0);
-        // long askPrice = bestAsk.price; // lowest price a seller is willing to accept
-
-        // long askQtyToTrade = Math.min(bestAsk.quantity, remQuantity);  // The amount left to trade
-
-
         if (state.getChildOrders().size() < 3 && remQuantity > 0) {
 
 //            long totalVolume = 0;
