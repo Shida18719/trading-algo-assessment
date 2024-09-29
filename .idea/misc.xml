@@ -8,12 +8,16 @@
 <<<<<<< HEAD
 =======
         <option value="$PROJECT_DIR$/algo-exercise/pom.xml" />
+<<<<<<< HEAD
 >>>>>>> test-branch
 =======
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
 >>>>>>> branch_R
+=======
+>>>>>>> 726122c47131a3f169a9e3d9805c27c7ca7759b5
+>>>>>>> test-branch
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>

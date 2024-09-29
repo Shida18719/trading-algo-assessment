@@ -6,15 +6,19 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="backtest" />
-        <module name="getting-started" />
-        <module name="dictionary" />
-        <module name="oms" />
-        <module name="collection" />
-        <module name="ui-exercise" />
-        <module name="algo" />
-        <module name="sequencer" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="algo" target="17" />
+      <module name="algo-exercise" target="17" />
+      <module name="backtest" target="17" />
+      <module name="collection" target="17" />
+      <module name="dictionary" target="17" />
+      <module name="getting-started" target="17" />
+      <module name="oms" target="17" />
+      <module name="parent" target="17" />
+      <module name="sequencer" target="17" />
+      <module name="ui-exercise" target="17" />
+    </bytecodeTargetLevel>
   </component>
 </project>
