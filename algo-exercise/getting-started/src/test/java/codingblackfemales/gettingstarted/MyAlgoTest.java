@@ -54,6 +54,12 @@ public class MyAlgoTest extends AbstractAlgoTest {
                                .count();
         assertTrue("Number of active buy orders should not exceed 3", activeBuyOrders <= 3);
 
+        // Check number of active sell orders
+        long activeSellOrders = state.getActiveChildOrders().stream()
+                .filter(order -> order.getSide() == Side.SELL)
+                .count();
+        assertTrue("Number of active sell orders should not exceed 3", activeSellOrders <= 3);
+
         // Check if the executed order does not exceed quantity
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
         assertTrue("Executed quantity should not exceed target", executedQuantity <= 13000);
