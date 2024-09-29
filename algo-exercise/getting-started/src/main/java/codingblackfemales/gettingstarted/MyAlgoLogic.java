@@ -50,9 +50,13 @@ public class MyAlgoLogic implements AlgoLogic {
          */
 
         // Transform each element into long type and sum them up
+
         executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> test-branch
         // Exit condition: stop once the total traded quantity matches the target, since we don't want to over trade
         if (executedQuantity >= quantityToTrade) {
             logger.info("[MYALGO] ======VWAP target achieved======. No more orders to place.");
@@ -66,14 +70,14 @@ public class MyAlgoLogic implements AlgoLogic {
             return NoAction;
         }
 
-        // Modify method- was interfering with order fulfillment
+        // Modify method was interfering with order fulfillment
         //checks how many child orders are currently active
         final var activeOrders = state.getActiveChildOrders();
 
         // If there are active orders, check conditions before canceling
         if (activeOrders.size() > 0) {
 
-        // Cancel the first active order, if it exist before placing new order:
+        // Cancel the first active order, if it exists before placing new order:
         //  based on if the price has moved significantly 
             final var option = activeOrders.stream().findFirst();
 
@@ -134,7 +138,7 @@ public class MyAlgoLogic implements AlgoLogic {
                 long minQtyToTrade = Math.min(bestBid.quantity, remQuantity);  // The amount left to trade
                 
                 if(minQtyToTrade > 0) {
-                    logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, joining passive side of book with: " + minQtyToTrade + " @ " + price);
+                    logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
                     executedQuantity += minQtyToTrade;
                     return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
                 }

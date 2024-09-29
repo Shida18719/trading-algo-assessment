@@ -3,6 +3,8 @@ package codingblackfemales.gettingstarted;
 import codingblackfemales.action.Action;
 import codingblackfemales.algo.AlgoLogic;
 import codingblackfemales.sotw.SimpleAlgoState;
+import codingblackfemales.sotw.marketdata.BidLevel;
+import codingblackfemales.util.Util;
 
 import java.nio.ByteBuffer;
 import messages.marketdata.*;
@@ -13,8 +15,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 
 /**
@@ -51,10 +51,12 @@ public class MyAlgoTest extends AbstractAlgoTest {
                                .filter(order -> order.getSide() == Side.BUY)
                                .count();
         assertTrue("Number of active buy orders should not exceed 3", activeBuyOrders <= 3);
-            
 
+        // Check if the executed order does not exceed quantity
+        long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
+        assertTrue("Executed quantity should not exceed target", executedQuantity <= 13000);
 
-        // Check if the target quantity is reached
+        // Check if the algo is cancelling orders when necessary
 
         //simple assert to check we had 3 orders created
         assertEquals(3, container.getState().getChildOrders().size());
