@@ -46,6 +46,8 @@ public class MyAlgoTest extends AbstractAlgoTest {
 
         SimpleAlgoState state = container.getState();
 
+        // AlgoLogic algoLogic = createAlgoLogic();
+
         // Check number of active buy orders
         long activeBuyOrders = state.getActiveChildOrders().stream()
                                .filter(order -> order.getSide() == Side.BUY)
