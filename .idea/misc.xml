@@ -4,6 +4,10 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
+<<<<<<< HEAD
+=======
+        <option value="$PROJECT_DIR$/algo-exercise/pom.xml" />
+>>>>>>> 726122c47131a3f169a9e3d9805c27c7ca7759b5
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
