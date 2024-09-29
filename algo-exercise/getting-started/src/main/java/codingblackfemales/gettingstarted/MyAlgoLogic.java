@@ -105,12 +105,15 @@ public class MyAlgoLogic implements AlgoLogic {
         // Calculate the remaining quantity to trade
         long remQuantity = quantityToTrade - executedQuantity;
 
+        long totalVolume = 0;
+        long volumePrice = 0;
+
         // Check if we should place a buy order
         // If fewer than 3 child orders exist and there is still more quantity to trade continue
         if (state.getChildOrders().size() < 3 && remQuantity > 0){
             
-            long totalVolume = 0;
-            long volumePrice = 0;
+//            long totalVolume = 0;
+//            long volumePrice = 0;
 
             // Loop through all child buy orders and sums their prices and quantities
                 for (int i = 0; i < state.getChildOrders().size(); i++) {
@@ -154,6 +157,48 @@ public class MyAlgoLogic implements AlgoLogic {
         // long askPrice = bestAsk.price; // lowest price a seller is willing to accept
 
         // long askQtyToTrade = Math.min(bestAsk.quantity, remQuantity);  // The amount left to trade
+
+
+        if (state.getChildOrders().size() < 3 && remQuantity > 0) {
+
+//            long totalVolume = 0;
+//            long volumePrice = 0;
+
+            // Loop through all child orders and sums their prices and quantities
+            for (int i = 0; i < state.getChildOrders().size(); i++) {
+                final AskLevel level = state.getAskAt(i);
+                if (level == null) {
+                    continue;  // Check for null values
+                }
+                // Calculate VWAP from market data (simple average based on bid price and volume)
+                totalVolume += level.quantity;
+                volumePrice += level.price * level.quantity;
+            }
+
+            calculatedVWAP = totalVolume > 0 ? (double) volumePrice / totalVolume : 0;
+
+            logger.debug("[MYALGO] Calculated VWAP: " + calculatedVWAP);
+
+            // Create a new sell limit order if the calculated VWAP is greater than the target VWAP
+            if (calculatedVWAP >= targetVWAP) {
+
+                // Get ask price at the top of the book
+                final AskLevel bestAsk = state.getAskAt(0);
+                long price = bestAsk.price; // lowest price a seller is willing to accept
+
+                // Ensures the remaining quantity to trade is the minimum of the best ask quantity
+                long minQtyToTrade = Math.min(bestAsk.quantity, remQuantity);  // The amount left to trade
+
+                if (minQtyToTrade > 0) {
+                    logger.info("[MYALGO] Creating a limit SELL order, have:" + state.getChildOrders().size() + " children, want 3, joining passive side of book with: " + minQtyToTrade + " @ " + price);
+                    executedQuantity += minQtyToTrade;
+                    return new CreateChildOrder(Side.SELL, minQtyToTrade, price); // Place a sell limit order
+                } else {
+                    logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
+                    // Do nothing, when 3 child orders exist
+                }
+            }
+        }
         return NoAction;
     }
 }            

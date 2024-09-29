@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
       </profile>
     </annotationProcessing>
+<<<<<<< HEAD
     <bytecodeTargetLevel>
       <module name="algo" target="17" />
       <module name="algo-exercise" target="17" />
@@ -20,5 +21,7 @@
       <module name="sequencer" target="17" />
       <module name="ui-exercise" target="17" />
     </bytecodeTargetLevel>
+=======
+>>>>>>> branch_R
   </component>
 </project>
