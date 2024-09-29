@@ -56,15 +56,6 @@ public class MyAlgoTest extends AbstractAlgoTest {
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
         assertTrue("Executed quantity should not exceed target", executedQuantity <= 13000);
 
-        // Check if VWAP is calculated and trading at prices close to the target VWAP
-        // calculates the difference between the calculated VWAP and the target VWAP
-
-        double calculatedVWAP = (List<ChildOrder>orders);
-        // BidLevel bidLevel = state.getBidAt(0);
-        // double calculatedVWAP = (double) (bidLevel.price * bidLevel.quantity) / bidLevel.quantity;
-
-        assertTrue("VWAP should be close to target", calculatedVWAP < 1.0);
-
         // Check if the algo is cancelling orders when necessary
 
         //simple assert to check we had 3 orders created
