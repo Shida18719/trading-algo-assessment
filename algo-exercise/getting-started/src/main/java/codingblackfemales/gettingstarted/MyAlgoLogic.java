@@ -82,7 +82,7 @@ public class MyAlgoLogic implements AlgoLogic {
 
                 double orderPrice = childOrder.getPrice();
 
-                // Cancel the order if the price has moved significantly
+                // Cancel the order if the price has moved significantly above the price on the top level
                 // Set a threshold for when the price is far enough to warrant cancellation
                 double priceThreshold = 0.05; // 5% threshold
 
@@ -148,8 +148,12 @@ public class MyAlgoLogic implements AlgoLogic {
         // Get ask price at the top of the book
         // final AskLevel bestAsk = state.getAskAt(0);
         // long askPrice = bestAsk.price; // lowest price a seller is willing to accept
-
         // long askQtyToTrade = Math.min(bestAsk.quantity, remQuantity);  // The amount left to trade
+
+
+        
+
+
         return NoAction;
     }
 }            

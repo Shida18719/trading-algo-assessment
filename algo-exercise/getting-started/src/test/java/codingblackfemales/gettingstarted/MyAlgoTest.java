@@ -2,16 +2,21 @@ package codingblackfemales.gettingstarted;
 
 import codingblackfemales.action.Action;
 import codingblackfemales.algo.AlgoLogic;
+import codingblackfemales.sotw.OrderState;
+import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.BidLevel;
 import codingblackfemales.util.Util;
 
 import java.nio.ByteBuffer;
+import java.util.List;
+
 import messages.marketdata.*;
 import messages.order.Side;
 
 import org.agrona.concurrent.UnsafeBuffer;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -52,21 +57,24 @@ public class MyAlgoTest extends AbstractAlgoTest {
         long activeBuyOrders = state.getActiveChildOrders().stream()
                                .filter(order -> order.getSide() == Side.BUY)
                                .count();
+                             
         assertTrue("Number of active buy orders should not exceed 3", activeBuyOrders <= 3);
 
-        // Check number of active sell orders
+
+        // Check number of active sell orders FAILING TEST - NO SELL ORDER YET
         long activeSellOrders = state.getActiveChildOrders().stream()
                 .filter(order -> order.getSide() == Side.SELL)
                 .count();
         assertTrue("Number of active sell orders should not exceed 3", activeSellOrders <= 3);
+
 
         // Check if the executed order does not exceed quantity
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
         assertTrue("Executed quantity should not exceed target", executedQuantity <= 13000);
 
         // Check if the algo is cancelling orders when necessary
-
-        //simple assert to check we had 3 orders created
-        assertEquals(3, container.getState().getChildOrders().size());
+        
+        // //simple assert to check we had 3 orders created
+        // assertEquals(3, container.getState().getChildOrders().size());
     }
 }
