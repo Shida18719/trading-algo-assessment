@@ -1,11 +1,13 @@
 import {MarketDepthRow} from "./useMarketDepthData";
 import "./MarketDepthPanel.css";
+import { PriceCell } from "./PriceCell";
 
 interface MarketDepthPanelProps {
     data: MarketDepthRow[];
   }
   
   export const MarketDepthPanel = (props: MarketDepthPanelProps) => {
+    const {data}= props;
     console.log({ props });
      return (
       <div>
@@ -30,17 +32,12 @@ interface MarketDepthPanelProps {
             {data.map((row, index) => (
               <tr key={index}>
                 {/* {bid side} */}
-
-                <td>{row.symbolLevel}</td>
                 <td>{row.level}</td>
                 <td>{row.bidQuantity}</td>
-                
-                <td className="bidArrow">
-                <span>↑</span>{row.bid}</td>
+                <PriceCell price={row.bid} side={"bid"}/>
                 
                 {/* {offer side} */}
-                <td className="askArrow">
-                <span>↓</span>{row.offer}</td>
+                <PriceCell price={row.offer} side={"offer"}/>
                 <td>{row.offerQuantity}</td>
               </tr>
             ))}
