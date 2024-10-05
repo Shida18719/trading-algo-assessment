@@ -76,5 +76,68 @@ public abstract class AbstractAlgoTest extends SequencerTestCase {
     }
 
 
+    protected UnsafeBuffer createTick2(){
+
+        final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
+        final BookUpdateEncoder encoder = new BookUpdateEncoder();
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
+        final UnsafeBuffer directBuffer = new UnsafeBuffer(byteBuffer);
+
+        //write the encoded output to the direct buffer
+        encoder.wrapAndApplyHeader(directBuffer, 0, headerEncoder);
+
+        //set the fields to desired values
+        encoder.venue(Venue.XLON);
+        encoder.instrumentId(123L);
+
+        encoder.askBookCount(3)
+                .next().price(98L).size(101L)
+                .next().price(101L).size(200L)
+                .next().price(110L).size(5000L);
+
+        encoder.bidBookCount(3)
+                .next().price(95L).size(100L)
+                .next().price(93L).size(200L)
+                .next().price(91L).size(300L);
+
+        encoder.instrumentStatus(InstrumentStatus.CONTINUOUS);
+        encoder.source(Source.STREAM);
+
+        return directBuffer;
+    }
+
+
+
+    protected UnsafeBuffer createTick3(){
+
+        final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
+        final BookUpdateEncoder encoder = new BookUpdateEncoder();
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(1024);
+        final UnsafeBuffer directBuffer = new UnsafeBuffer(byteBuffer);
+
+        //write the encoded output to the direct buffer
+        encoder.wrapAndApplyHeader(directBuffer, 0, headerEncoder);
+
+        //set the fields to desired values
+        encoder.venue(Venue.XLON);
+        encoder.instrumentId(123L);
+
+        encoder.askBookCount(3)
+                .next().price(103L).size(101L)
+                .next().price(105L).size(200L)
+                .next().price(110L).size(5000L);
+
+        encoder.bidBookCount(3)
+                .next().price(100L).size(100L)
+                .next().price(98L).size(200L)
+                .next().price(95L).size(300L);
+
+        encoder.instrumentStatus(InstrumentStatus.CONTINUOUS);
+        encoder.source(Source.STREAM);
+
+        return directBuffer;
+    }
 
 }
