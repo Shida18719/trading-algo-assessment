@@ -7,6 +7,7 @@ import codingblackfemales.action.NoAction;
 import codingblackfemales.algo.AlgoLogic;
 import codingblackfemales.orderbook.order.Order;
 import codingblackfemales.sotw.ChildOrder;
+import codingblackfemales.sotw.OrderState;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.AskLevel;
 import codingblackfemales.sotw.marketdata.BidLevel;
@@ -26,7 +27,6 @@ public class MyAlgoLogic implements AlgoLogic {
     private final long quantityToTrade;
     private final double targetVWAP;
     private long executedQuantity = 0;
-    private double calculatedVWAP = 0;
 
     public MyAlgoLogic(long quantityToTrade, double targetVWAP) {
         this.quantityToTrade = quantityToTrade;
@@ -53,7 +53,9 @@ public class MyAlgoLogic implements AlgoLogic {
 
         executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
 
-        // Exit condition: stop once the total traded quantity matches the target, since we don't want to over trade
+        double limitOrderPrice = CalculateVWAP(state);
+
+        // // Exit condition: stop once the total traded quantity matches the target, since we don't want to over trade
         if (executedQuantity >= quantityToTrade) {
             logger.info("[MYALGO] ======VWAP target achieved======. No more orders to place.");
             return NoAction;
@@ -70,11 +72,17 @@ public class MyAlgoLogic implements AlgoLogic {
         //checks how many child orders are currently active
         final var activeOrders = state.getActiveChildOrders();
 
+        // Exit condition: stop once the total traded quantity matches the target, since we don't want to over trade
+        if (executedQuantity >= quantityToTrade) {
+            logger.info("[MYALGO] Order limit achieved: No more orders to place.");
+            return NoAction;
+        }
+
         // If there are active orders, check conditions before canceling
         if (activeOrders.size() > 0) {
 
-        // Cancel the first active order, if it exists before placing new order:
-        //  based on if the price has moved significantly 
+          //Cancel the first active order, if it exists before placing new order:
+          // based on if the price has moved significantly 
             final var option = activeOrders.stream().findFirst();
 
             if (option.isPresent()) {
@@ -82,15 +90,22 @@ public class MyAlgoLogic implements AlgoLogic {
 
                 double orderPrice = childOrder.getPrice();
 
-                // Cancel the order if the price has moved significantly
+                // Cancel the order if the price has moved significantly above the price on the top level
                 // Set a threshold for when the price is far enough to warrant cancellation
                 double priceThreshold = 0.05; // 5% threshold
+                var pending = OrderState.PENDING; 
+
+                // Check if the order is still pending in order to prevent
+                // cancellation of already filled or partially filled orders.
+                if(childOrder.getState() == pending) {
 
                 // Calculates the absolute difference between the order price
-                if(Math.abs(orderPrice - calculatedVWAP) / calculatedVWAP > priceThreshold) {
+                double priceSlide = Math.abs(orderPrice - limitOrderPrice) / limitOrderPrice;
+                    if (priceSlide > priceThreshold) {
 
-                logger.info("[MYLALGO] Cancelling order:" + childOrder);
-                return new CancelChildOrder(childOrder);
+                    logger.info("[MYLALGO] Cancelling order:" + orderPrice);
+                    return new CancelChildOrder(childOrder);
+                    }
                 }
             }
             else {
@@ -100,6 +115,8 @@ public class MyAlgoLogic implements AlgoLogic {
 
         // Calculate the remaining quantity to trade
         long remQuantity = quantityToTrade - executedQuantity;
+        final BidLevel bestBid = state.getBidAt(0);
+        final AskLevel bestAsk = state.getAskAt(0);
 
         long totalVolume = 0;
         long volumePrice = 0;
@@ -107,46 +124,70 @@ public class MyAlgoLogic implements AlgoLogic {
         // Check if we should place a buy order
         // If fewer than 3 child orders exist and there is still more quantity to trade continue
         if (state.getChildOrders().size() < 3 && remQuantity > 0){
+<<<<<<< HEAD
             
 //            long totalVolume = 0;
 //            long volumePrice = 0;
+=======
+            // double limitOrderPrice = CalculateVWAP(state);
+>>>>>>> test-branch
 
-            // Loop through all child buy orders and sums their prices and quantities
-                for (int i = 0; i < state.getChildOrders().size(); i++) {
-                    final BidLevel level = state.getBidAt(i);
-                    if (level == null) {
-                        continue;  // Check for null values
-                    }
-                // Calculate VWAP from market data (simple average based on bid price and volume)
-                totalVolume += level.quantity;
-                volumePrice += level.price * level.quantity;
-                }
-
-            calculatedVWAP = totalVolume > 0 ? (double) volumePrice / totalVolume : 0;
-
-            logger.debug("[MYALGO] Calculated VWAP: " + calculatedVWAP);
+            logger.debug("[MYALGO] Calculated VWAP: " + limitOrderPrice);
 
             // Create a new buy limit order if the calculated VWAP is less than the target VWAP
-            if (calculatedVWAP <= targetVWAP) {
+            if (limitOrderPrice <= targetVWAP) {
 
-                // Get bid price at the top of the book
-                final BidLevel bestBid = state.getBidAt(0);
-                long price = bestBid.price; // highest price a buyer is willing to pay
+                if (bestBid != null) {
 
-                // Ensures the remaining quantity to trade is the minimum of the best bid quantity
-                long minQtyToTrade = Math.min(bestBid.quantity, remQuantity);  // The amount left to trade
-                
-                if(minQtyToTrade > 0) {
-                    logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
-                    executedQuantity += minQtyToTrade;
-                    return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
+                    // Get bid price at the top of the book
+                    // final BidLevel bestBid = state.getBidAt(0);
+                    long price = bestBid.price; // highest price a buyer is willing to pay
+
+                    // Ensures the remaining quantity to trade is the minimum of the best bid quantity
+                    long minQtyToTrade = Math.min(bestBid.quantity, remQuantity);  // The amount left to trade
+                    
+                    if(minQtyToTrade > 0) {
+                        logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
+                        executedQuantity += minQtyToTrade;
+                        return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
+                    }
+                    else {
+                        logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
+                        // Do nothing, when 3 child orders exist
+                    }
                 }
-                else {
-                    logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
-                    // Do nothing, when 3 child orders exist
+            } return NoAction;
+        
+        }
+
+        if (state.getChildOrders().size() < 3 && remQuantity > 0){
+            logger.debug("[MYALGO] Calculated VWAP FOR SELL: " + limitOrderPrice);
+
+            if (limitOrderPrice >= targetVWAP) {
+
+                if (bestAsk != null) {
+
+                    // Get bid price at the top of the book
+                    // final BidLevel bestBid = state.getBidAt(0);
+                    long price = bestAsk.price; // highest price a buyer is willing to pay
+
+                    // Ensures the remaining quantity to trade is the minimum of the best bid quantity
+                    long minQtyToTrade = Math.min(bestAsk.quantity, remQuantity);  // The amount left to trade
+                    
+                    if(minQtyToTrade > 0) {
+                        logger.info("[MYALGO] Creating a limit SELL order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
+                        executedQuantity += minQtyToTrade;
+                        return new CreateChildOrder(Side.SELL, minQtyToTrade, price); // Place a buy limit order
+                    }
+                    else {
+                        logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
+                        // Do nothing, when 3 child orders exist
+                    }
                 }
             }
+        // }
         }
+<<<<<<< HEAD
         // Check if we should place a sell order
         // Get ask price at the top of the book
         if (state.getChildOrders().size() < 3 && remQuantity > 0) {
@@ -190,5 +231,27 @@ public class MyAlgoLogic implements AlgoLogic {
             }
         }
         return NoAction;
+=======
+         return NoAction;
+    }
+
+    // Method to calculate VWAP
+    private double CalculateVWAP(SimpleAlgoState state) {
+        long totalVolume = 0;
+        long volumePrice = 0;
+    
+        // Loop through all child buy orders and sums their prices and quantities
+        for (int i = 0; i < state.getChildOrders().size(); i++) {
+            final BidLevel level = state.getBidAt(i);
+            if (level == null) {
+                continue;  // Check for null values
+            }
+        // Calculate VWAP from market data (simple average based on bid price and volume)
+        totalVolume += level.quantity;
+        volumePrice += level.price * level.quantity;
+        }
+
+    return totalVolume > 0 ? (double) volumePrice / totalVolume : 0;
+>>>>>>> test-branch
     }
 }            
