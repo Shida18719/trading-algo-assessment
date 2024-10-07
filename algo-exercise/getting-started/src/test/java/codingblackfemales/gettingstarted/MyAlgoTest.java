@@ -33,13 +33,14 @@ import org.junit.Test;
  *
  */
 public class MyAlgoTest extends AbstractAlgoTest {
-    // private  MyAlgoLogic algoLogic;
+
+    private static final long quantityToTrade = 13000;
+    private static final double targetVWAP = 100;
 
     @Override
     public AlgoLogic createAlgoLogic() {
         //this adds your algo logic to the container classes
-
-        return new MyAlgoLogic(13000, 108.5);
+        return new MyAlgoLogic(quantityToTrade, targetVWAP);
     }
     
 
@@ -48,10 +49,11 @@ public class MyAlgoTest extends AbstractAlgoTest {
 
         //create a sample market data tick....
         send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
 
         SimpleAlgoState state = container.getState();
-
-        // AlgoLogic algoLogic = createAlgoLogic();
 
         // Check number of active buy orders
         long activeBuyOrders = state.getActiveChildOrders().stream()
@@ -61,7 +63,7 @@ public class MyAlgoTest extends AbstractAlgoTest {
         assertTrue("Number of active buy orders should not exceed 3", activeBuyOrders <= 3);
 
 
-        // Check number of active sell orders FAILING TEST - NO SELL ORDER YET
+        // Check number of active sell orders PASSING TEST - NOT displaying SELL ORDER
         long activeSellOrders = state.getActiveChildOrders().stream()
                 .filter(order -> order.getSide() == Side.SELL)
                 .count();
@@ -70,11 +72,11 @@ public class MyAlgoTest extends AbstractAlgoTest {
 
         // Check if the executed order does not exceed quantity
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
-        assertTrue("Executed quantity should not exceed target", executedQuantity <= 13000);
 
-        // Check if the algo is cancelling orders when necessary
+        assertTrue("Executed quantity should not exceed target", executedQuantity > 0 && executedQuantity <= 13000);
         
-        // //simple assert to check we had 3 orders created
-        // assertEquals(3, container.getState().getChildOrders().size());
+        
+        //simple assert to check we had 3 orders created
+         assertEquals(3, container.getState().getChildOrders().size());
     }
 }
