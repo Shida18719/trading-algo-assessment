@@ -124,13 +124,7 @@ public class MyAlgoLogic implements AlgoLogic {
         // Check if we should place a buy order
         // If fewer than 3 child orders exist and there is still more quantity to trade continue
         if (state.getChildOrders().size() < 3 && remQuantity > 0){
-<<<<<<< HEAD
-            
-//            long totalVolume = 0;
-//            long volumePrice = 0;
-=======
             // double limitOrderPrice = CalculateVWAP(state);
->>>>>>> test-branch
 
             logger.debug("[MYALGO] Calculated VWAP: " + limitOrderPrice);
 
@@ -187,7 +181,6 @@ public class MyAlgoLogic implements AlgoLogic {
             }
         // }
         }
-<<<<<<< HEAD
         // Check if we should place a sell order
         // Get ask price at the top of the book
         if (state.getChildOrders().size() < 3 && remQuantity > 0) {
@@ -231,7 +224,6 @@ public class MyAlgoLogic implements AlgoLogic {
             }
         }
         return NoAction;
-=======
          return NoAction;
     }
 
@@ -252,6 +244,5 @@ public class MyAlgoLogic implements AlgoLogic {
         }
 
     return totalVolume > 0 ? (double) volumePrice / totalVolume : 0;
->>>>>>> test-branch
     }
 }            
