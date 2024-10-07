@@ -93,7 +93,7 @@ public class MyAlgoLogic implements AlgoLogic {
                 // Cancel the order if the price has moved significantly above the price on the top level
                 // Set a threshold for when the price is far enough to warrant cancellation
                 double priceThreshold = 0.05; // 5% threshold
-                 
+                var pending = OrderState.PENDING; 
 
                 // Check if the order is still pending in order to prevent
                 // cancellation of already filled or partially filled orders.

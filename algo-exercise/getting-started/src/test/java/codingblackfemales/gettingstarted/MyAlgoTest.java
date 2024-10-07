@@ -74,7 +74,16 @@ public class MyAlgoTest extends AbstractAlgoTest {
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
 
         assertTrue("Executed quantity should not exceed target", executedQuantity > 0 && executedQuantity <= 13000);
-        
+
+
+        // Check if order is been cancelled when price moves away from up to 5% threshold
+         double cancelPriceThreshold = state.getActiveChildOrders().stream()
+         .filter(order -> order.getState() == OrderState.CANCELLED)
+         .count();
+
+        assertTrue("Cancel order when price moves away from threshold", Math.abs(cancelPriceThreshold - targetVWAP)  > 0.05);
+
+
         
         //simple assert to check we had 3 orders created
          assertEquals(3, container.getState().getChildOrders().size());
