@@ -141,7 +141,7 @@ public class MyAlgoTest extends AbstractAlgoTest {
 
 
     @Test
-    public void testCancelBuyOrderThreshold () throws Exception {
+    public void testCancelBuyOrderThreshold() throws Exception {
 
         send(createTick());
         send(createTick2());
@@ -164,7 +164,30 @@ public class MyAlgoTest extends AbstractAlgoTest {
         .orElse(0);
         
         assertTrue("Buy orders should be cancelled if price deviates by more than 8%", cancelBuyOrderThreshold <= 0.08);
+    }
 
+
+    @Test
+    public void testFilledOrPartialFilledOrders() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Filter out filled or partially filled orders
+        List<ChildOrder> filledOrPartialFilledOrders = state.getChildOrders().stream()
+        .filter(order -> order.getState() == OrderState.FILLED)
+        .collect(Collectors.toList());
+
+        // Assert none of the filled or partial order have been cancelled
+        boolean anyCancelled = filledOrPartialFilledOrders.stream()
+        .anyMatch(order -> order.getState() == OrderState.CANCELLED);
+
+        // Assert that none of the filled orders are cancelled
+        assertFalse("Filled orders should not be cancelled", anyCancelled);
     }
 
  }
