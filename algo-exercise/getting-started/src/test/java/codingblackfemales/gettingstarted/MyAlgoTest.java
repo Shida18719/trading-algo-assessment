@@ -212,4 +212,22 @@ public class MyAlgoTest extends AbstractAlgoTest {
         assertTrue("Average price should be close to profit margin threshold", askProfitThreshold <= bestBid.getPrice() * (1 + 0.02));
     }
 
+
+    @Test
+    public void testReturnNoActions() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Simple Assert no actions is returned
+        MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
+        Action action = algoLogic.evaluate(state);
+
+        assertEquals(NoAction.class, action.getClass());
+    }
+
 }
