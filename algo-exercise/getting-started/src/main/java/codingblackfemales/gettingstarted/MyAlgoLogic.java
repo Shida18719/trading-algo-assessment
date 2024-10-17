@@ -156,6 +156,9 @@ public class MyAlgoLogic implements AlgoLogic {
         long buyOrder = state.getActiveChildOrders().stream()
              .filter(order -> order.getSide() == Side.BUY).count();
 
+        long totalVolume = 0;
+        long volumePrice = 0;
+
         // Check if we should place a buy order
         // If fewer than 3 child orders exist and there is still more quantity to trade continue
         if (buyOrder < 3 && remQuantity > 0){
@@ -232,7 +235,9 @@ public class MyAlgoLogic implements AlgoLogic {
                 logger.info("[MYALGO] No sell order placed.");
             }
         }
+
         return NoAction;
+
     }
 
     // Method to calculate VWAP

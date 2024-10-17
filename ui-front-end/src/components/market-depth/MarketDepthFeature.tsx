@@ -1,8 +1,7 @@
 // import { Placeholder } from "../placeholder";
 import { useMarketDepthData } from "./useMarketDepthData";
 import { schemas } from "../../data/algo-schemas";
-import "./MarketDepthFeature.css";
-
+import {MarketDepthPanel} from './MarketDepthPanel';
 
 // prettier-ignore
 // const testData: MarketDepthRow[] = [
@@ -22,56 +21,14 @@ import "./MarketDepthFeature.css";
  * TODO
  */
 export const MarketDepthFeature = () => {
-  // const data = useMarketDepthData(schemas.prices);
-  // return <Placeholder />;
   const data = useMarketDepthData(schemas.prices);
 
   if (!data) {
     return <div>Trading Price feeds loading...</div>;
   }
 
-  return (
-    
-    <div>
-      <h3>Market Depth</h3>
-      <div className="MarketDepthFeature">
-        <div className="MarketDepthFeature-table">
-        
-        <table>
-          <thead>
-            <tr>
-            <th colSpan={1}></th>
-              <th colSpan={2}>Bid</th>
-              <th colSpan={3}>Offer</th>
-            </tr>
-            <tr>
-              <th>Level</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Price</th>
-              <th>Quantity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr key={index}>
-                {/* {bid side} */}
-                <td>{row.level}</td>
-                <td>{row.bidQuantity}</td>
-                
-                <td className="bidArrow">
-                <span>↑</span>{row.bid}</td>
-
-                {/* {offer side} */}
-                <td>
-                <span>↓</span>{row.offer}</td>
-                <td>{row.offerQuantity}</td>
-              </tr>
-            ))}
-          </tbody>
-         </table>
-         </div>
-      </div>
-    </div>
+  return ( 
+    <MarketDepthPanel data={data} />
   );
+
 };
