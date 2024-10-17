@@ -98,8 +98,73 @@ public class MyAlgoTest extends AbstractAlgoTest {
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
 
         assertTrue("Executed quantity should not exceed target", executedQuantity > 0 && executedQuantity <= 13000);
+    }
+
+
+    @Test
+    public void testCancelFirstOrder() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Check if first order is cancelled
+        var cancelFirstOrder = state.getActiveChildOrders().stream()
+        .filter(order -> order.getState() == OrderState.CANCELLED).findFirst();
+        
+        assertNotNull(cancelFirstOrder);
+    }
+
+    
+    @Test
+    public void testCancelledOrder() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Check Filled orders have not been cancelled
+        long cancelledOrder = state.getChildOrders().stream()
+        .filter(order -> order.getState() == OrderState.CANCELLED)
+        .count();
+
+        assertEquals(3, cancelledOrder);
+
+        assertTrue("Filled orders have not been cancelled",  cancelledOrder != OrderState.FILLED);
+    }
+
+
+    @Test
+    public void testCancelBuyOrderThreshold () throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Call the CalculateVWAP method
+        MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
+
+        long calculatedVWAP = algoLogic.CalculateVWAP(state);
+
+
+        // Simple assert order cancelled at threshold of 8%
+        double cancelBuyOrderThreshold = state.getActiveChildOrders().stream()
+        .filter(order -> order.getSide() == Side.BUY) // Filter buy-side orders
+        .mapToDouble(order -> Math.abs(order.getPrice() - calculatedVWAP) / calculatedVWAP)
+        .max()
+        .orElse(0);
+        
+        assertTrue("Buy orders should be cancelled if price deviates by more than 8%", cancelBuyOrderThreshold <= 0.08);
 
     }
- 
 
  }
