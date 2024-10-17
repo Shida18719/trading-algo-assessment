@@ -5,22 +5,14 @@ import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.OrderState;
 import codingblackfemales.action.CancelChildOrder;
 import codingblackfemales.sotw.SimpleAlgoState;
-import codingblackfemales.sotw.marketdata.BidLevel;
-import codingblackfemales.sotw.marketdata.AskLevel;
 
 import java.util.stream.Collectors;
 import java.util.List;
-
-import org.agrona.concurrent.UnsafeBuffer;
-import messages.marketdata.*;
-import messages.order.Side;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.nio.ByteBuffer;
 
 /**
  * This test plugs together all of the infrastructure, including the order book (which you can trade against)
@@ -70,6 +62,30 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
         long filledQuantity = state.getChildOrders().stream().map(ChildOrder::getFilledQuantity).reduce(Long::sum).get();
         //and: check that our algo state was updated to reflect our fills when the market data
         assertEquals(802, filledQuantity); //we should have 802 filled quantity
+    }
+
+
+    @Test
+    public void testFilledOrPartialFilledOrders() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Filter out filled or partially filled orders
+        List<ChildOrder> filledOrPartialFilledOrders = state.getChildOrders().stream()
+        .filter(order -> order.getState() == OrderState.FILLED)
+        .collect(Collectors.toList());
+
+        // Assert none of the filled or partial order have been cancelled
+        boolean anyCancelled = filledOrPartialFilledOrders.stream()
+        .anyMatch(order -> order.getState() == OrderState.CANCELLED);
+
+        // Assert that none of the filled orders are cancelled
+        assertFalse("Filled orders should not be cancelled", anyCancelled);
     }
 
 }
