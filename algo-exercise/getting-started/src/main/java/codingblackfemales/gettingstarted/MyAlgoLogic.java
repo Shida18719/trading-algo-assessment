@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import static codingblackfemales.action.NoAction.NoAction;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MyAlgoLogic implements AlgoLogic {
     // Tracks and logs messages
@@ -88,24 +89,33 @@ public class MyAlgoLogic implements AlgoLogic {
             return NoAction;
         }
 
-        // Get the count of filled orders from active child orders
-        long filledOrder = state.getActiveChildOrders().stream()
-        .filter(order -> order.getState() == OrderState.FILLED)
-        .count();
 
         // If there are active orders, check conditions before canceling
         if (activeOrders.size() > 0) {
 
             //Cancel the first active order, if it exists before placing new order:
             // based on if the price has moved significantly 
-            final var option = activeOrders.stream().findAny();
+            final var option = activeOrders.stream().findFirst();
 
             if (option.isPresent()) {
                     var childOrder = option.get();
 
-                    double orderPrice = childOrder.getPrice();
+                    double orderPrice = childOrder.getPrice(); // Current price
                     var filledOrderQty = childOrder.getFilledQuantity();
                     double totalFilledQuantity = childOrder.getQuantity();
+
+                    logger.info("[MYALGO] Total Filled Quantity: " + totalFilledQuantity);
+
+                    if (childOrder.getState() == OrderState.FILLED) {
+                        // Checks case where the order is already filled and ensures not to cancel
+                        logger.info("[MYLALGO] Order is already filled, cannot cancel: " + childOrder);
+                        return NoAction;
+                    } 
+                    else if (filledOrderQty > 0 && filledOrderQty < totalFilledQuantity) {
+                        // Checks when orders are partially filled
+                        logger.info("[MYLALGO] Partially filled order detected, do not cancel: " + childOrder);
+                        return NoAction;
+                    }
 
                     // Cancel the order if the price has moved significantly above the price on the top level
                     // Set a threshold for when the price is far enough to warrant cancellation
@@ -118,7 +128,8 @@ public class MyAlgoLogic implements AlgoLogic {
 
                         // Calculate the price slide for a buy order
                         double priceSlide = Math.abs(orderPrice - limitOrderPrice) / limitOrderPrice;
-                        if (priceSlide > priceThreshold) {
+                        if (priceSlide > priceThreshold && childOrder.getState() != OrderState.FILLED) {
+
                             logger.info("[MYALGO] Cancelling BUY ORDER with PRICESLIDE: " + priceSlide);
                             return new CancelChildOrder(childOrder);
                         }
@@ -127,29 +138,19 @@ public class MyAlgoLogic implements AlgoLogic {
                         double priceThreshold = 0.03;
 
                         // Calculate the price slide for a sell order
-                        double priceSlide = Math.abs(limitOrderPrice - orderPrice) / limitOrderPrice;
+                        double priceSlide = Math.abs(orderPrice - bestBid.price) / bestBid.price;
+
                         if (priceSlide > priceThreshold) {
                             logger.info("[MYALGO] Cancelling SELL ORDER with PRICESLIDE: " + priceSlide);
                             return new CancelChildOrder(childOrder);
                     }
                 }
                 
-                else if (childOrder.getState() == filledOrder) {
-                    // Checks case where the order is already filled and ensures not to cancel
-                    logger.info("[MYLALGO] Order is already filled, cannot cancel: " + childOrder);
-                    return NoAction;
-                } 
-                else if (filledOrderQty > 0 && filledOrderQty < totalFilledQuantity) {
-                    // Checks when orders are partially filled
-                    logger.info("[MYLALGO] Partially filled order detected, do not cancel: " + childOrder);
-                    return NoAction;
-                }
-            } 
-            else {
+            } else {
                 return NoAction;
             }
         }
-
+        
 
 
         long buyOrder = state.getActiveChildOrders().stream()
@@ -160,7 +161,7 @@ public class MyAlgoLogic implements AlgoLogic {
         if (buyOrder < 3 && remQuantity > 0){
             logger.info("[MYALGO] Calculated Limit Order VWAP FOR BUY: " + limitOrderPrice);
 
-            // Create a new buy limit order if the Order Price is less than the target VWAP
+            // Create a new buy limit order if the limit Order VWAP Price is less than the target VWAP
             if (limitOrderPrice <= targetVWAP) {
 
                 if (bestBid != null) {
@@ -175,15 +176,15 @@ public class MyAlgoLogic implements AlgoLogic {
                         logger.info("[MYALGO] Remaining Quantity: " + remQuantity);
 
                     if(minQtyToTrade > 0) {
-                            logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
-                            executedQuantity += minQtyToTrade;
+                        logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
+                        executedQuantity += minQtyToTrade;
 
-                            logger.info("[MYALGO] Calculated PASSIVE EXECUTED QUANTITY: " + executedQuantity);
+                        logger.info("[MYALGO] Calculated PASSIVE EXECUTED QUANTITY: " + executedQuantity);
 
-                            return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
+                        return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
                     }
                     else {
-                            logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
+                        logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
                             // Do nothing, when 3 child orders exist
                     }
                 }
@@ -191,6 +192,7 @@ public class MyAlgoLogic implements AlgoLogic {
         }
 
 
+        // Executing BUY orders at the ask price
         long sellOrder = state.getActiveChildOrders().stream()
              .filter(order -> order.getSide() == Side.SELL).count();
 
@@ -199,36 +201,42 @@ public class MyAlgoLogic implements AlgoLogic {
         
             // Set a profit margin threshold, 2% above average buy price
             double profitThreshold = 0.02;
-            // Sell when the best ask price offer is greater than the profit threshold
 
-            if (bestAsk != null && bestAsk.price > bestBid.price * (1 + profitThreshold)) {
+            double averageBuyPrice = state.getChildOrders().stream()
+            .filter(o -> o.getSide() == Side.BUY)
+            .mapToDouble(o -> o.getPrice() * o.getQuantity())
+            .sum() / executedQuantity;
+
+            // Sell when the best ask price offer is greater than the profit threshold
+            // Sell if the best ask is greater than the average buy price plus margin (2% profit margin)
+            if (bestAsk != null && bestAsk.price >= averageBuyPrice * (1 + profitThreshold)) {
                 long price = bestAsk.price;
                 long minQtyToTrade = Math.min(bestAsk.quantity, remQuantity);
 
                 logger.info("[MYALGO] Best Ask: " + bestAsk.price);
+                logger.info("[MYALGO] SELL AverageBuyPrice: " + averageBuyPrice);
 
-                logger.info("[MYALGO] SELL ProfitThreshold: " + bestBid.price * (1 + profitThreshold));
+                logger.info("[MYALGO] SELL ProfitThreshold: " + averageBuyPrice * (1 + profitThreshold));
             
                 if (minQtyToTrade > 0) {
 
-                        logger.info("[MYALGO] Creating a LIMIT SELL order, have:" + state.getChildOrders().size() + " on Ask side of book with: " + minQtyToTrade + " @ " + price);
-                        logger.info("[MYALGO] Creating a limit SELL order at price: " + price + " for quantity: " + minQtyToTrade);
+                    logger.info("[MYALGO] Creating a LIMIT SELL order, have:" + state.getChildOrders().size() + " on Ask side of book with: " + minQtyToTrade + " @ " + price);
+                    logger.info("[MYALGO] Creating a limit SELL order at price: " + price + " for quantity: " + minQtyToTrade);
 
-                        // Updates the amount of quantity traded when either a buy or sell order is placed.
-                        executedQuantity += minQtyToTrade; 
-                        return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place sell order
+                    // Updates the amount of quantity traded when a buy order is placed.
+                    executedQuantity += minQtyToTrade; 
+                    return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place sell order
                 }
-                else {
-                    logger.info("[MYALGO] No sell order placed.");
-                }
-            
+            }
+            else {
+                logger.info("[MYALGO] No sell order placed.");
             }
         }
         return NoAction;
     }
 
     // Method to calculate VWAP
-    private long CalculateVWAP(SimpleAlgoState state) {
+    protected long CalculateVWAP(SimpleAlgoState state) { 
         long totalVolume = 0;
         long volumePrice = 0;
 
