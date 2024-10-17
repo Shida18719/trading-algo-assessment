@@ -190,4 +190,26 @@ public class MyAlgoTest extends AbstractAlgoTest {
         assertFalse("Filled orders should not be cancelled", anyCancelled);
     }
 
- }
+
+    @Test
+    public void testAskProfitThreshold() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        // Check if Ask is excecuting order close to the Average Buy Price with a threshold of 2%
+        long askProfitThreshold = state.getChildOrders().stream()
+        .filter(order -> order.getSide() == Side.SELL)
+        .mapToLong(order -> order.getPrice() * order.getQuantity())
+        .sum();
+    
+        final BidLevel bestBid = state.getBidAt(0);
+
+        assertTrue("Average price should be close to profit margin threshold", askProfitThreshold <= bestBid.getPrice() * (1 + 0.02));
+    }
+
+}
