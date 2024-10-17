@@ -230,4 +230,36 @@ public class MyAlgoTest extends AbstractAlgoTest {
         assertEquals(NoAction.class, action.getClass());
     }
 
+
+    @Test
+    public void testCalculateVWAP() throws Exception {
+
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        SimpleAlgoState state = container.getState();
+
+        MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
+
+        // Call the CalculateVWAP method
+        long calculatedVWAP = algoLogic.CalculateVWAP(state);
+
+        // Simple Assert VWAP calculation
+        assertTrue("Create a Buy order close to VWAP limit order price", calculatedVWAP >= targetVWAP);     
+    }
+
+
+    @Test
+    public void testCreateChildOrders() throws Exception {
+        
+        send(createTick());
+        send(createTick2());
+        send(createTick3());
+        send(createTick4());
+
+        // simple assert to check we had 3 orders created
+        assertEquals(3, container.getState().getChildOrders().size());
+    }
 }
