@@ -57,12 +57,12 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
      *    - Asserts filled or partially filled orders should not be cancelled
      *  
      * 4. Unfilled Buy Order Cancellation (testCancelUnfilledBuyOrder):
-     *    - Check that unfilled buy orders are cancelled when VWAP exceeds current price
+     *    - Check that unfilled buy orders are cancelled when VWAP exceeds current price.
      * 
      *  5. VWAP Buy Order Creation (testCalculateVWAPCreateBuyOrder):
      *    - Asserts buy order creation based on VWAP calculations
      *    - Ensures buy orders are created only when price is below target VWAP (100)
-     *    - Check limit order price calculation against VWAP benchmark
+     *    - Check limit order price calculation against VWAP benchmark.
      */
 
 
@@ -165,6 +165,7 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
         // Assert unfilled orders is cancelled
         boolean cancelUnfilledBuyOrder = unFilledOrders.stream()
         .filter(order -> order.getSide() == Side.BUY)
+        .filter(order -> order.getFilledQuantity() == 0)
         .anyMatch(order -> order.getState() == OrderState.CANCELLED);
 
         

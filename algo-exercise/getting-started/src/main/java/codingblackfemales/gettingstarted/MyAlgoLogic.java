@@ -3,11 +3,7 @@ package codingblackfemales.gettingstarted;
 import codingblackfemales.action.Action;
 import codingblackfemales.action.CreateChildOrder;
 import codingblackfemales.action.CancelChildOrder;
-import codingblackfemales.action.NoAction;
-import codingblackfemales.action.OrderSide;
 import codingblackfemales.algo.AlgoLogic;
-import codingblackfemales.orderbook.order.Order;
-import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.OrderState;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.AskLevel;
@@ -19,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static codingblackfemales.action.NoAction.NoAction;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class MyAlgoLogic implements AlgoLogic {
     // Tracks and logs messages
@@ -52,20 +45,38 @@ public class MyAlgoLogic implements AlgoLogic {
          * Add your logic here....
          * 
          * Logic Summary:
-         * Logs the current market state.
-         * Calculate how much trade has been (executedQuantity) 
-         * and determine the remaining quantity to trade (remQuantity).
-         * Limit the number of active child orders to (orderCount - max 5 orders).
-         * Cancel active orders if the price has moved significantly (to avoid poor trades).
-         * Place buy or sell orders based on VWAP and market conditions, 
-         * ensuring not to exceed the remaining quantity.
-         * Use VWAP to help decide if the current market price is favorable for placing orders.
+         
+         * 1. Logs the current state of the order book.
+         
+         * 2. Calculate how much trade has been Executed (executedQuantity) and
+         *    keep track of the total quantity traded (executedQuantity).
+         *    and determine the remaining quantity to trade (remQuantity).
+         * 
+         * 3. Check how many active child orders exist, before placing new orders.
+         *    Limit the number of active child orders created to (orderCount - max 5 orders).
+         * 
+         * 4. Cancel any unfilled orders if the limitOrderPrice (VWAP) is higher than the Current price.
+         * 
+         * 5. If fewer than 3 orders exist and there’s more quantity to trade, 
+         *    the algorithm considers creating a new order.
+         * 
+         * 6. Places buy limit order at the best bid price based on VWAP and market conditions, 
+         *    ensuring not to exceed the remaining quantity and there are fewer than 3 active buy orders, and the remaining quantity to buy.
+         * 
+         * 7. Places a sell order ensuring there are fewer than 3 active sell orders, remaining quantity to sell,
+         *    and the best bid is less than or equal to the best ask ("going flat" mechanism).
+         * 
+         * 8. Uses VWAP calculated based on the bid prices as a benchmark to help decide,
+         *    if the current VWAP price (limitOrderPrice) is below the target VWAP (targetVWAP),
+         *    and if so, create a buy order at the best bid price available.
+         * 
+         * 9. Return NoAction in a situation where there are no active orders or reaches trading limit
          *
          */
 
         // Transform each element into long type and calculates the total quantity 
         // of shares that have been traded so far, summing up child orders
-        executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
+         executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
 
         long limitOrderPrice = CalculateVWAP(state); // Stores VWAP Method
         
@@ -75,7 +86,7 @@ public class MyAlgoLogic implements AlgoLogic {
         final BidLevel bestBid = state.getBidAt(0);
         final AskLevel bestAsk = state.getAskAt(0);
 
-        // retrieves a list of child orders, if Order Creation Limit of 5 is Reached, 
+        // Retrieves a list of child orders, if Order Creation Limit of 5 is Reached, 
         // prevents the algorithm from creating more orders
         var orderCount = state.getChildOrders().size();
         if (orderCount > 5) {
@@ -96,7 +107,7 @@ public class MyAlgoLogic implements AlgoLogic {
         if (activeOrders.size() > 0) {
 
             //Cancel the Any active order, if it exists before canceling order
-            // based on if the price is below the VWAP 
+            // based on if the price is above the VWAP 
             final var option = activeOrders.stream().findAny();
 
             if (option.isPresent()) {
@@ -194,8 +205,8 @@ public class MyAlgoLogic implements AlgoLogic {
 
             /**
             * Sell at the current Market best bid price, 
-            * if the bestAsk is greater than the bestBid price margin (2% profit margin)
-            * Check if there is a bid to cross
+            * if the bestAsk is greater than the bestBid
+            * Perharps we are going flat
             */
             if (bestBid != null) {
                 long price = bestBid.price;
