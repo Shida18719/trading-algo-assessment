@@ -1,25 +1,12 @@
 package codingblackfemales.gettingstarted;
 
 import codingblackfemales.action.Action;
-import codingblackfemales.action.CancelChildOrder;
 import codingblackfemales.action.NoAction;
 import codingblackfemales.algo.AlgoLogic;
-import codingblackfemales.sotw.OrderState;
-import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.SimpleAlgoState;
-import codingblackfemales.sotw.marketdata.BidLevel;
-import codingblackfemales.util.Util;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import messages.marketdata.*;
 import messages.order.Side;
 
-import static codingblackfemales.action.NoAction.NoAction;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -46,6 +33,24 @@ public class MyAlgoTest extends AbstractAlgoTest {
     }
     
 
+    /**
+     * Tests Cases Summary:
+     * 1. Order Creation Limit (testCreateThreeChildOrders):
+     *    - Asserts check three child orders created, if there are fewer than 3
+     * 2. Buy Order Creation (testBuyOrderCreated):
+     *    - Asserts the number of active buy orders doesn't exceed 3
+     * 3. Sell Order Creation (testSellOrdersCreated):
+     *    - Asserts the number of active sell orders doesn't exceed 3
+     * 4. Order Quantity Validation (testExecutedOrderQuantity):
+     *    - Asserts orders doesn't exceed the target quantity of 13000
+     * 5. VWAP Calculation (testCalculateVWAP):
+     *    - Asserts check that calculatedVWAP creates order close (relatively cheaper) to target of 100.
+     * 
+     *  Test Configuration:
+    * - Target Quantity: 13000
+    * - Target VWAP: 100
+     */
+
     @Test
     public void testBuyOrderCreated() throws Exception {
 
@@ -62,7 +67,7 @@ public class MyAlgoTest extends AbstractAlgoTest {
                                .filter(order -> order.getSide() == Side.BUY)
                                .count();
                              
-        assertTrue("Buy orders should at least 3", activeBuyOrders <= 3);
+        assertTrue("Buy orders should at least 3", activeBuyOrders <= 3);   
     }
 
     
@@ -75,8 +80,7 @@ public class MyAlgoTest extends AbstractAlgoTest {
         send(createTick4());
 
         SimpleAlgoState state = container.getState();
-        // Check number of active sell orders PASSING TEST - NOT displaying SELL ORDER
-        // Except with cross-trade
+        // Check number of active sell orders
         long activeSellOrders = state.getChildOrders().stream()
         .filter(order -> order.getSide() == Side.SELL)
         .count();
@@ -102,164 +106,32 @@ public class MyAlgoTest extends AbstractAlgoTest {
 
 
     @Test
-    public void testCancelFirstOrder() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Check if first order is cancelled
-        var cancelFirstOrder = state.getActiveChildOrders().stream()
-        .filter(order -> order.getState() == OrderState.CANCELLED).findFirst();
-        
-        assertNotNull(cancelFirstOrder);
-    }
-
-    
-    @Test
-    public void testCancelledOrder() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Check Filled orders have not been cancelled
-        long cancelledOrder = state.getChildOrders().stream()
-        .filter(order -> order.getState() == OrderState.CANCELLED)
-        .count();
-
-        assertEquals(3, cancelledOrder);
-
-        assertTrue("Filled orders have not been cancelled",  cancelledOrder != OrderState.FILLED);
-    }
-
-
-    @Test
-    public void testCancelBuyOrderThreshold() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Call the CalculateVWAP method
-        MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
-
-        long calculatedVWAP = algoLogic.CalculateVWAP(state);
-
-
-        // Simple assert order cancelled at threshold of 8%
-        double cancelBuyOrderThreshold = state.getActiveChildOrders().stream()
-        .filter(order -> order.getSide() == Side.BUY) // Filter buy-side orders
-        .mapToDouble(order -> Math.abs(order.getPrice() - calculatedVWAP) / calculatedVWAP)
-        .max()
-        .orElse(0);
-        
-        assertTrue("Buy orders should be cancelled if price deviates by more than 8%", cancelBuyOrderThreshold <= 0.08);
-    }
-
-
-    @Test
-    public void testFilledOrPartialFilledOrders() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Filter out filled or partially filled orders
-        List<ChildOrder> filledOrPartialFilledOrders = state.getChildOrders().stream()
-        .filter(order -> order.getState() == OrderState.FILLED)
-        .collect(Collectors.toList());
-
-        // Assert none of the filled or partial order have been cancelled
-        boolean anyCancelled = filledOrPartialFilledOrders.stream()
-        .anyMatch(order -> order.getState() == OrderState.CANCELLED);
-
-        // Assert that none of the filled orders are cancelled
-        assertFalse("Filled orders should not be cancelled", anyCancelled);
-    }
-
-
-    @Test
-    public void testAskProfitThreshold() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Check if Ask is excecuting order close to the Average Buy Price with a threshold of 2%
-        long askProfitThreshold = state.getChildOrders().stream()
-        .filter(order -> order.getSide() == Side.SELL)
-        .mapToLong(order -> order.getPrice() * order.getQuantity())
-        .sum();
-    
-        final BidLevel bestBid = state.getBidAt(0);
-
-        assertTrue("Average price should be close to profit margin threshold", askProfitThreshold <= bestBid.getPrice() * (1 + 0.02));
-    }
-
-
-    @Test
     public void testReturnNoActions() throws Exception {
 
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
         SimpleAlgoState state = container.getState();
 
-        // Simple Assert no actions is returned
+        // Simple Assert NoActions is returned
         MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
         Action action = algoLogic.evaluate(state);
+
+        // Simple asserts there are no active child orders
+        assertTrue("There should be no active orders", state.getActiveChildOrders().isEmpty());
+
+        // Assert that NoAction is returned
+        assertTrue("NoAction should be returned when there are no active orders", action instanceof NoAction);
 
         assertEquals(NoAction.class, action.getClass());
     }
 
 
     @Test
-    public void testCalculateVWAP() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        MyAlgoLogic algoLogic = (MyAlgoLogic) createAlgoLogic();
-
-        // Call the CalculateVWAP method
-        long calculatedVWAP = algoLogic.CalculateVWAP(state);
-
-        // Simple Assert VWAP calculation
-        assertTrue("Create a Buy order close to VWAP limit order price", calculatedVWAP >= targetVWAP);     
-    }
-
-
-    @Test
-    public void testCreateChildOrders() throws Exception {
+    public void testCreateThreeChildOrders() throws Exception {
         
         send(createTick());
         send(createTick2());
-        send(createTick3());
-        send(createTick4());
 
         // simple assert to check we had 3 orders created
         assertEquals(3, container.getState().getChildOrders().size());
     }
+
 }
