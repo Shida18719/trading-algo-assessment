@@ -20,8 +20,9 @@ import {MarketDepthPanel} from './MarketDepthPanel';
 /**
  * TODO
  */
+// Parent component
 export const MarketDepthFeature = () => {
-  const data = useMarketDepthData(schemas.prices);
+  const data = useMarketDepthData(schemas.prices); // Using the Custom Hook
 
   if (!data) {
     return <div>Trading Price feeds loading...</div>;
