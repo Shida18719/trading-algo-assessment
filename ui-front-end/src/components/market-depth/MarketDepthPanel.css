@@ -1,45 +1,123 @@
-.MarketDepthPanel {
-    display: flex;
-    justify-content: space-around;
-    font-size: 14px;
-   
-   }
-
-.marketDepthPanel-table{
-    width: 20%;
-    padding: 12px 16px;
-   
+/* General table style */
+.marketDepthPanel {
+    border-collapse: collapse;
+    margin: auto;
+    background-color: #fefefe;   
+    width: 60%;
 }
+
 
 table, th{
-    width: 100%;
     border: 1.5px solid rgb(150, 185, 188);
     border-collapse: collapse;
-    
+    vertical-align: middle;  
+    font-size: 1rem;
+    text-align: center;
+    padding: 5px 0;
+    background-color: #f5f5f5;
 }
 
-td {
-    padding: 8px;
-    text-align: right;
-    border: 1.5px solid rgb(150, 185, 188);
-    border-collapse: collapse;
-  }
-
-
-.bidArrow {
-    color: green; /* Green for buy/bid side */
-    font-weight: bold;
+.marketDepthPanel th[colspan="2"] {
+  padding-bottom: 1px;
 }
-  
-.offerArrow {
-    color: red; /* Red for sell/offer side */
-    font-weight: bold;
+
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+    vertical-align:middle;
 }
   
 tbody tr:hover {
     background-color: #f1f1f1; /* Row hover effect */
 }
 
-.quantityCell {
+td {
+  border: 1.5px solid rgb(150, 185, 188);
+}
 
+.level {
+  text-align: center;
+}
+
+/*********** Price Cell Column **********/
+
+.priceCell {
+    font-weight: bold;
+    vertical-align: middle; 
+    font-size: 1rem;
+    white-space: nowrap;
+    width: 20%;
+  }
+
+  .priceCell span {
+    margin: 0 3rem;    
+  }
+  
+  .priceCell.bidArrow span {
+    color: rgba(42, 85, 15, 0.93);
+    font-size: 1rem; 
+    font-weight: bolder;
+    position: relative;
+    right: 2rem;
+    float: left;
+    justify-content: center;
+  }
+  
+
+  .priceCell.offerArrow span {
+    color: rgba(242, 27, 11, 0.896);  /* Red for offer (↓) */
+    font-weight: bolder;
+    font-size: 1rem;
+    position: relative;
+    left: 2rem;
+    float: right;
+  }
+
+  /*********** Quantity Cell Column  **********/
+
+  .quantityCell {
+    position: relative;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color:#f9f9f9;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+    vertical-align: middle;
+    display: flex;
+    align-self: center;
+
+}
+
+.quantityBar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  z-index: 1;
+  transition: width 0.3s ease; /* Smooth transition for the bar */
+}
+
+
+.quantityCell .bidBar {
+  background-color: rgb(37, 157, 37);
+  text-align: right;
+  margin-right: 0;
+}
+
+
+.quantityCell .offerBar {
+  background-color: rgba(242, 27, 11, 0.896);;
+  left: 0;
+  top:0;
+  text-align: left;
+  margin-left: 0;
+}
+
+.quantityCell span {
+  position: relative;
+  z-index: 2;
+  padding: 0 10px;
+  text-align: left;
 }
