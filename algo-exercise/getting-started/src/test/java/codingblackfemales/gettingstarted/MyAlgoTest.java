@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class MyAlgoTest extends AbstractAlgoTest {
 
-    private static final long quantityToTrade = 13000L;
+    private static final long quantityToTrade = 3000L;
     private static final long targetVWAP = 100L;
 
     @Override
@@ -101,7 +101,7 @@ public class MyAlgoTest extends AbstractAlgoTest {
         // Check if the executed order does not exceed quantity
         long executedQuantity = state.getChildOrders().stream().mapToLong(order -> order.getQuantity()).sum();
 
-        assertTrue("Executed quantity should not exceed target", executedQuantity > 0 && executedQuantity <= 13000);
+        assertTrue("Executed quantity should not exceed target", executedQuantity > 0 && executedQuantity <= 3000);
     }
 
 
