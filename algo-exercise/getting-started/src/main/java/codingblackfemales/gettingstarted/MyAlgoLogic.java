@@ -4,12 +4,18 @@ import codingblackfemales.action.Action;
 import codingblackfemales.action.CreateChildOrder;
 import codingblackfemales.action.CancelChildOrder;
 import codingblackfemales.algo.AlgoLogic;
+import codingblackfemales.orderbook.order.Order;
+import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.OrderState;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.AskLevel;
 import codingblackfemales.sotw.marketdata.BidLevel;
 import codingblackfemales.util.Util;
 import messages.order.Side;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +30,7 @@ public class MyAlgoLogic implements AlgoLogic {
     private final double targetVWAP;
     private long executedQuantity = 0;
 
-    public MyAlgoLogic(long quantityToTrade, double targetVWAP) {
+    public MyAlgoLogic(long quantityToTrade, long targetVWAP) {
         this.quantityToTrade = quantityToTrade;
         this.targetVWAP = targetVWAP;
     }
@@ -76,11 +82,12 @@ public class MyAlgoLogic implements AlgoLogic {
 
         // Transform each element into long type and calculates the total quantity 
         // of shares that have been traded so far, summing up child orders
-         executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
+        executedQuantity = state.getChildOrders().stream().mapToLong(o -> o.getQuantity()).sum();
 
         long limitOrderPrice = CalculateVWAP(state); // Stores VWAP Method
         
         // Calculate the remaining quantity to trade
+        // long quantityToTrade = 1300;
         long remQuantity = quantityToTrade - executedQuantity;
 
         final BidLevel bestBid = state.getBidAt(0);
@@ -108,7 +115,7 @@ public class MyAlgoLogic implements AlgoLogic {
 
             //Cancel the Any active order, if it exists before canceling order
             // based on if the price is above the VWAP 
-            final var option = activeOrders.stream().findAny();
+            final var option = activeOrders.stream().findFirst();
 
             if (option.isPresent()) {
                 var childOrder = option.get();
@@ -163,29 +170,30 @@ public class MyAlgoLogic implements AlgoLogic {
 
             // Create a new buy limit order if the limit Order VWAP Price is less than the target VWAP
             if (limitOrderPrice <= targetVWAP) {
-                logger.info("[MYALGO] Calculated Limit Order VWAP FOR BUY: " + limitOrderPrice);
 
                 if (bestBid != null) {
                     logger.info("[MYALGO] CHECK NULL BID:" + bestBid);
 
                         // Get bid price at the top of the book
-                        long price = bestBid.price; // highest price a buyer is willing to pay
+                        // long price = bestBid.price; // highest price a buyer is willing to pay
 
+                        long price = limitOrderPrice;
+                        
                         // Ensures the remaining quantity to trade is the minimum of the best bid quantity
-                        long minQtyToTrade = Math.min(bestBid.quantity, remQuantity);  // The amount left to trade
+                        long quantity = Math.min(bestBid.quantity, remQuantity);  // The amount left to trade
                         
                         logger.info("[MYALGO] Taget Price: " + targetVWAP);
                         logger.info("[MYALGO] Remaining Quantity: " + remQuantity);
 
-                    if(minQtyToTrade > 0) {
-                        logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + minQtyToTrade + " @ " + price);
+                    if(quantity > 0) {
+                        logger.info("[MYALGO] Creating a limit BUY order, have:" + state.getChildOrders().size() + " children, want 3, on passive side of book with: " + quantity + " @ " + price);
                         
                         // Updates the amount of quantity traded when a buy order is placed.
-                        executedQuantity += minQtyToTrade;
+                        executedQuantity += quantity;
 
                         logger.info("[MYALGO] Calculated PASSIVE EXECUTED QUANTITY: " + executedQuantity);
 
-                        return new CreateChildOrder(Side.BUY, minQtyToTrade, price); // Place a buy limit order
+                        return new CreateChildOrder(Side.BUY, quantity, price); // Place a buy limit order
                     }
                     else {
                         logger.info("[MYALGO] Have:" + state.getChildOrders().size() + " children, want 3, done.");
@@ -202,31 +210,31 @@ public class MyAlgoLogic implements AlgoLogic {
 
         if (sellOrder < 3 && remQuantity > 0) {
             logger.info("[MYALGO] Checking for Sell Orders. Remaining quantity: " + remQuantity);
-
+            
             /**
             * Sell at the current Market best bid price, 
             * if the bestAsk is greater than the bestBid
             * Perharps we are going flat
             */
             if (bestBid != null) {
+                
+
                 long price = bestBid.price;
 
-                long minQtyToTrade = Math.min(bestBid.quantity, remQuantity);
-
                 if (bestBid.price <= bestAsk.price){
+                    long quantity = Math.min(bestBid.quantity, remQuantity);
 
                     logger.info("[MYALGO] Best Bid: " + bestBid.price);
-
-                    logger.info("[MYALGO] SELL Threshold: " + bestAsk.price);
+                    
                 
-                    if (minQtyToTrade > 0) {
+                    if (quantity > 0) {
 
-                        logger.info("[MYALGO] Creating a LIMIT SELL order, have:" + state.getChildOrders().size() + " on Ask side of book with: " + minQtyToTrade + " @ " + price);
-                        logger.info("[MYALGO] Creating a limit SELL order at price: " + price + " for quantity: " + minQtyToTrade);
+                        logger.info("[MYALGO] Creating a LIMIT SELL order, have:" + state.getChildOrders().size() + " on Ask side of book with: " + quantity + " @ " + price);
+                        logger.info("[MYALGO] Creating a limit SELL order at price: " + price + " for quantity: " + quantity);
 
                         // Updates the amount of quantity traded when a sell order is placed.
-                        executedQuantity += minQtyToTrade; 
-                        return new CreateChildOrder(Side.SELL, minQtyToTrade, price); // Place sell order
+                        executedQuantity += quantity; 
+                        return new CreateChildOrder(Side.SELL, quantity, price); // Place sell order
                     }
                 }
                 else {
@@ -253,7 +261,9 @@ public class MyAlgoLogic implements AlgoLogic {
             // volume)
             totalVolume += bid.quantity;
             volumePrice += bid.price * bid.quantity;
-        }
+        } 
+        
+        
         return totalVolume > 0 ? (long) volumePrice / totalVolume : 0;
     }
 }

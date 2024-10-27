@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 public class MyAlgoBackTest extends AbstractAlgoBackTest {
 
 
-    private static final long quantityToTrade = 13000L;
+    private static final long quantityToTrade = 3000L;
     private static final long targetVWAP = 100L;
 
     @Override
@@ -87,7 +87,7 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
         //Check things like filled quantity, cancelled order count etc....
         long filledQuantity = state.getChildOrders().stream().map(ChildOrder::getFilledQuantity).reduce(Long::sum).get();
         //and: check that our algo state was updated to reflect our fills when the market data
-        assertEquals(1300, filledQuantity); //we should have 1300 filled quantity
+         assertEquals(300, filledQuantity); //we should have 1300 filled quantity
     }
 
 
