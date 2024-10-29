@@ -42,12 +42,12 @@ public class MyAlgoTest extends AbstractAlgoTest {
      * 3. Sell Order Creation (testSellOrdersCreated):
      *    - Asserts the number of active sell orders doesn't exceed 3
      * 4. Order Quantity Validation (testExecutedOrderQuantity):
-     *    - Asserts orders doesn't exceed the target quantity of 13000
+     *    - Asserts orders doesn't exceed the target quantity of 3000
      * 5. VWAP Calculation (testCalculateVWAP):
      *    - Asserts check that calculatedVWAP creates order close (relatively cheaper) to target of 100.
      * 
      *  Test Configuration:
-    * - Target Quantity: 13000
+    * - Target Quantity: 3000
     * - Target VWAP: 100
      */
 
