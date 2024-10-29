@@ -50,13 +50,13 @@ public class MyAlgoLogic implements AlgoLogic {
          
          * 2. Calculate how much trade has been Executed (executedQuantity) and
          *    keep track of the total quantity traded (executedQuantity)
-         *    and determine the remaining quantity to trade (remQuantity). #91
+         *    and determine the remaining quantity to trade (remQuantity). #85
          * 
          * 3. Check how many active child orders exist, before placing new orders.
          *    Limit the number of active child orders created to (orderCount - max 5 orders). #98
          * 
          * 4. Cancel unfilled Buy orders if the limitOrderPrice (VWAP) is higher than the Current price.
-         *    Preserves partially filled orders and prevents the cancellation of completed orders.
+         *    Preserves partially filled orders and prevents the cancellation of completed orders. #108
          * 
          * 5. If fewer than 3 orders exist and there’s more quantity to trade, 
          *    the algorithm considers creating a new order.
@@ -104,11 +104,14 @@ public class MyAlgoLogic implements AlgoLogic {
         // All active child orders
         final var activeOrders = state.getActiveChildOrders();
 
-         // If there are active orders, check conditions before canceling
+        // If there are active orders, check conditions before canceling
         if (activeOrders.size() > 0) {
 
-            //Cancel the Any active order, if it exists before canceling order
-            // based on if the price is above the VWAP 
+            /**
+             * Iterates through the list of active child orders
+             * and gets the first active order, if it exists before canceling the order
+             * based on if the price is above the VWAP
+            */
             final var option = activeOrders.stream().findFirst();
 
             if (option.isPresent()) {
