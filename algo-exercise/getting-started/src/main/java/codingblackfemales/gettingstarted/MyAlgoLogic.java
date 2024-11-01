@@ -206,15 +206,11 @@ public class MyAlgoLogic implements AlgoLogic {
         if (sellOrder < 3 && remQuantity > 0) {
             logger.info("[MYALGO] Checking for Sell Orders. Remaining quantity: " + remQuantity);
 
-            // boolean hasBuyPosition = state.getChildOrders().stream()
-            // .anyMatch(order -> order.getSide() == Side.BUY && order.getState() == OrderState.FILLED);
-
-            // if (hasBuyPosition) {
-
             /**
             * Sell at the current Market best bid price, 
             * if the bestAsk is greater than the bestBid
-            * Perharps we are going flat
+            * Perharps we are going flat.
+            * In an Ideal case we should be selling higher than the entry price to make profit
             */
                 if (bestBid != null) {
                     long price = bestBid.price;
