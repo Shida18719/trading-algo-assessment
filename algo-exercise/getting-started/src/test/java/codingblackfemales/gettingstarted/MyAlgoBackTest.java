@@ -97,8 +97,8 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
     public void testTotalOrderCount() throws Exception {
         send(createTick());
         
-         // Simple asserts that total active order count should be 5
-        // assertTrue("Total active child orders should be 5", container.getState().getChildOrders().size() > 5);
+        // Simple asserts that total active order count should be 5
+        assertTrue("Total active child orders should be 5", container.getState().getChildOrders().size() > 5);
     }
     
 
