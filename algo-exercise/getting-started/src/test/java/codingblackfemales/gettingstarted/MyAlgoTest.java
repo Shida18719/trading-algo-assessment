@@ -43,8 +43,8 @@ public class MyAlgoTest extends AbstractAlgoTest {
      *    - Asserts the number of active sell orders doesn't exceed 3
      * 4. Order Quantity Validation (testExecutedOrderQuantity):
      *    - Asserts orders doesn't exceed the target quantity of 3000
-     * 5. VWAP Calculation (testCalculateVWAP):
-     *    - Asserts check that calculatedVWAP creates order close (relatively cheaper) to target of 100.
+     * 5. Return NoActions (testReturnNoActions):
+     *    - Asserts check that NoAction should be returned when there are no active orders
      * 
      *  Test Configuration:
     * - Target Quantity: 3000

@@ -196,7 +196,7 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
         assertTrue("Create a Buy order if buy the price is less than the targetVWAP benchmark", createBuyOrder);
 
         // Simple Assert VWAP calculation
-        assertTrue("Create a Buy order with a price close to or above the VWAP (limit order price)", limitOrderPrice <= targetVWAP);
+        assertTrue("Create a Buy order with a price close to or above the VWAP (limit order price)", limitOrderPrice < targetVWAP);
     }
 
 }
