@@ -43,12 +43,16 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
 
     /**
      * Tests Summary:
-     * 1. Total Order Creation And FilledQuantity (testTotalOrderCreationAndFilledQuantity):
+     * 1. Buy Order Creation (testBuyOrderCreated):
+     *    - Asserts the number of active buy orders doesn't exceed 3
+     * 2. Sell Order Creation (testSellOrdersCreated):
+     *    - Asserts the number of active sell orders doesn't exceed 3
+     * 3. Total Order Creation And FilledQuantity (testTotalOrderCreationAndFilledQuantity):
      *    - Validates the functionality of the algorithm with market data simulation
      *    - Asserts check six child orders created
      *    - Asserts filled quantity matches expected value of 1300 after market movement
      * 
-     * 2. Total Order Count (testTotalOrderCount):
+     * 4. Total Order Count (testTotalOrderCount):
      *    - Checks how many child orders are currently active and limits the number to 5
      * 
      * 3. Order Cancellation (testCancelledOrderCount):
@@ -56,17 +60,55 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
      *    - Verifies 5 trades are successfully executed
      *    - Checks the presence of cancelled orders in active order list
      * 
-     * 4. Filled Order State (testFilledOrPartialFilledOrders):
+     * 5. Filled Order State (testFilledOrPartialFilledOrders):
      *    - Asserts filled or partially filled orders should not be cancelled
      *  
-     * 5. Unfilled Buy Order Cancellation (testCancelUnfilledBuyOrder):
+     * 6. Unfilled Buy Order Cancellation (testCancelUnfilledBuyOrder):
      *    - Check that unfilled buy orders are cancelled when VWAP exceeds current price.
      * 
-     *  6. VWAP Buy Order Creation (testCalculateVWAPCreateBuyOrder):
+     * 7. VWAP Buy Order Creation (testCalculateVWAPCreateBuyOrder):
      *    - Asserts buy order creation based on VWAP calculations
      *    - Ensures buy orders are created only when price is below target VWAP (100)
      *    - Check limit order price calculation against VWAP benchmark.
      */
+
+
+     @Test
+     public void testBuyOrderCreated() throws Exception {
+ 
+         //create a sample market data tick....
+         send(createTick());
+         send(createTick2());
+         send(createTick3());
+         send(createTick4());
+ 
+         SimpleAlgoState state = container.getState();
+ 
+         // Check number of active buy orders
+         long activeBuyOrders = state.getActiveChildOrders().stream()
+                                .filter(order -> order.getSide() == Side.BUY)
+                                .count();
+                              
+         assertTrue("Buy orders should at least 3", activeBuyOrders <= 3);   
+     }
+ 
+     
+     @Test
+     public void testSellOrdersCreated() throws Exception {
+ 
+         send(createTick());
+         send(createTick2());
+         send(createTick3());
+         send(createTick4());
+ 
+         SimpleAlgoState state = container.getState();
+         // Check number of active sell orders
+         long activeSellOrders = state.getChildOrders().stream()
+         .filter(order -> order.getSide() == Side.SELL)
+         .count();
+ 
+         assertTrue("Sell orders should not exceed 3", activeSellOrders <= 3);
+     }
 
 
     @Test
@@ -168,7 +210,6 @@ public class MyAlgoBackTest extends AbstractAlgoBackTest {
         .filter(order -> order.getFilledQuantity() == 0)
         .anyMatch(order -> order.getState() == OrderState.CANCELLED);
 
-        
         assertTrue("Unfilled Buy orders should be cancelled", cancelUnfilledBuyOrder);
     }
 
