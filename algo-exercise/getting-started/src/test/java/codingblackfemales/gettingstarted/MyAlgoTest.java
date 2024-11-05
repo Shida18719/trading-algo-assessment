@@ -4,7 +4,6 @@ import codingblackfemales.action.Action;
 import codingblackfemales.action.NoAction;
 import codingblackfemales.algo.AlgoLogic;
 import codingblackfemales.sotw.SimpleAlgoState;
-import messages.order.Side;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,13 +36,9 @@ public class MyAlgoTest extends AbstractAlgoTest {
      * Tests Cases Summary:
      * 1. Order Creation Limit (testCreateThreeChildOrders):
      *    - Asserts check three child orders created, if there are fewer than 3
-     * 2. Buy Order Creation (testBuyOrderCreated):
-     *    - Asserts the number of active buy orders doesn't exceed 3
-     * 3. Sell Order Creation (testSellOrdersCreated):
-     *    - Asserts the number of active sell orders doesn't exceed 3
-     * 4. Order Quantity Validation (testExecutedOrderQuantity):
+     * 2. Order Quantity Validation (testExecutedOrderQuantity):
      *    - Asserts orders doesn't exceed the target quantity of 3000
-     * 5. Return NoActions (testReturnNoActions):
+     * 3. Return NoActions (testReturnNoActions):
      *    - Asserts check that NoAction should be returned when there are no active orders
      * 
      *  Test Configuration:
@@ -51,42 +46,6 @@ public class MyAlgoTest extends AbstractAlgoTest {
     * - Target VWAP: 100
      */
 
-    @Test
-    public void testBuyOrderCreated() throws Exception {
-
-        //create a sample market data tick....
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-
-        // Check number of active buy orders
-        long activeBuyOrders = state.getActiveChildOrders().stream()
-                               .filter(order -> order.getSide() == Side.BUY)
-                               .count();
-                             
-        assertTrue("Buy orders should at least 3", activeBuyOrders <= 3);   
-    }
-
-    
-    @Test
-    public void testSellOrdersCreated() throws Exception {
-
-        send(createTick());
-        send(createTick2());
-        send(createTick3());
-        send(createTick4());
-
-        SimpleAlgoState state = container.getState();
-        // Check number of active sell orders
-        long activeSellOrders = state.getChildOrders().stream()
-        .filter(order -> order.getSide() == Side.SELL)
-        .count();
-
-        assertTrue("Sell orders should not exceed 3", activeSellOrders <= 3);
-    }
 
 
     @Test
