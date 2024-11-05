@@ -4,6 +4,7 @@ import codingblackfemales.action.Action;
 import codingblackfemales.action.CreateChildOrder;
 import codingblackfemales.action.CancelChildOrder;
 import codingblackfemales.algo.AlgoLogic;
+import codingblackfemales.sotw.ChildOrder;
 import codingblackfemales.sotw.OrderState;
 import codingblackfemales.sotw.SimpleAlgoState;
 import codingblackfemales.sotw.marketdata.AskLevel;
@@ -23,6 +24,7 @@ public class MyAlgoLogic implements AlgoLogic {
     private final long quantityToTrade;
     private final long targetVWAP;
     private long executedQuantity = 0;
+    private double totalProfit = 0;
 
     public MyAlgoLogic(long quantityToTrade, long targetVWAP) {
         this.quantityToTrade = quantityToTrade;
@@ -139,10 +141,10 @@ public class MyAlgoLogic implements AlgoLogic {
                     return NoAction;
                 }
 
-                // Cancel the order if the limitOrderPrice (VWAP) is higher than the Current price
+                // Cancel the order if the limitOrderPrice (VWAP) is higher than the Current price or equal to zero
                 if (childOrder.getSide() == Side.BUY && filledOrderQty == 0) {
 
-                    if (limitOrderPrice >= orderPrice) {
+                    if (limitOrderPrice == 0 || limitOrderPrice >= orderPrice) {
 
                         logger.info("[MYALGO] Cancelling UNFILLED ORDER: " + childOrder);
                         return new CancelChildOrder(childOrder);
@@ -228,6 +230,7 @@ public class MyAlgoLogic implements AlgoLogic {
 
                             logger.info("[MYALGO] Creating a LIMIT SELL order, have:" + state.getChildOrders().size() + " on Passive Sell at bestBid with: " + minQtyToTrade + " @ " + price);
                             logger.info("[MYALGO] Creating a limit SELL order at price: " + price + " for quantity: " + minQtyToTrade);
+                            logger.info("[MYALGO] After-Trade Analysis: Total Profit = " + totalProfit);
 
                             // Updates the amount of quantity traded when a sell order is placed.
                             executedQuantity += minQtyToTrade; 
@@ -237,13 +240,47 @@ public class MyAlgoLogic implements AlgoLogic {
                     else {
                         logger.info("[MYALGO] Have" + state.getChildOrders().size() + " children, want 5, done.");
                     }
-                }
-            // }   
+                }  
         }
         return NoAction;
-    }  
+    }
 
 
+    // After-trade analysis method
+    public double calculateProfit(SimpleAlgoState state) {
+        // Total filled quantity and cost for buy orders
+        final long totalBuyOrdersFilledQuantity = state.getChildOrders().stream()
+                .filter(order -> order.getSide() == Side.BUY && order.getFilledQuantity() > 0)
+                .mapToLong(ChildOrder::getFilledQuantity)
+                .sum();
+        
+        final double buyOrdersTotalCost = state.getChildOrders().stream()
+                .filter(order -> order.getSide() == Side.BUY && order.getFilledQuantity() > 0)
+                .mapToDouble(order -> order.getPrice() * order.getFilledQuantity())
+                .sum();
+
+        // Calculate average cost per unit for the buy orders.
+        double averageBuyPrice = totalBuyOrdersFilledQuantity > 0 ? buyOrdersTotalCost / totalBuyOrdersFilledQuantity : 0;
+
+        // Total filled quantity for sell orders
+        final long totalSellOrdersFilledQuantity = state.getChildOrders().stream()
+                .filter(order -> order.getSide() == Side.SELL && order.getFilledQuantity() > 0)
+                .mapToLong(ChildOrder::getFilledQuantity)
+                .sum();
+        
+        final double sellOrdersFilled = state.getChildOrders().stream()
+                .filter(order -> order.getSide() == Side.SELL && order.getFilledQuantity() > 0)
+                .mapToDouble(order -> order.getPrice() * order.getFilledQuantity())
+                .sum();
+
+        // Calculate profit
+        totalProfit = sellOrdersFilled - (averageBuyPrice * totalSellOrdersFilledQuantity);
+        logger.info("[MYALGO] After-Trade Analysis: Total Profit = " + totalProfit);
+
+        return totalProfit;
+    }
+
+        
     // Method to calculate VWAP
     protected long CalculateVWAP(SimpleAlgoState state) { // give the modifier visibility access to the package
         long totalVolume = 0;
